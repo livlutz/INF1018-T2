@@ -53,7 +53,7 @@ funcp gera(FILE *f, unsigned char codigo[]){
           if (c0 != '=')
             error("comando invalido", line);
             
-          if (fscanf(myfp, " %c%d %c %c%d", &var1, &idx1, &op, &var2, &idx2) != 5)
+          if (fscanf(f, " %c%d %c %c%d", &var1, &idx1, &op, &var2, &idx2) != 5)
             error("comando invalido", line);
             
           printf("%d %c%d = %c%d %c %c%d\n",line, var0, idx0, var1, idx1, op, var2, idx2);
