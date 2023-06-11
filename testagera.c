@@ -42,6 +42,6 @@ int main(int argc, char *argv[]) {
   fclose(myfp);
 
   /* chama a função */
-  res = (*funcaoSimples) (....);  /* passando argumentos apropriados */
-  ...
+  //res = (*funcaoSimples) (....);  /* passando argumentos apropriados */
+  //...
 }

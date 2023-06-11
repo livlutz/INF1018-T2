@@ -1,0 +1,160 @@
+
+  3 - atribui constante a variavel, retornando a variavel (testar constantes negativas e positivas)
+v1 < $40
+ret v1
+
+v1 < $-50
+ret v1
+
+  4 - atribui parametro a variavel, retornando a variavel
+v1 < p1
+ret v1
+
+  5 - atribui variavel a variavel, retornando a variavel
+v1 < $2
+v2 < v1 
+ret v2
+
+  6 - testar todas as 5 variaveis (e com menos tbm)
+v1 < $3
+v2 < v1
+v3 < v2
+ret v3
+
+v1 < $4
+v2 < v1
+v3 < v2
+v4 < v3
+ret v4
+
+v1 < $5
+v2 < v1
+v3 < v2
+v4 < v3
+v5 < v4
+ret v5
+
+v1 < $6
+v2 < v1
+v3 < v2
+v4 < v3
+v5 < v4
+v1 < v5
+ret v1
+
+  7 - testar soma de constantes
+v1 = $1 + $5
+ret v1
+  
+  8 - testar diferenca de constantes
+v1 = $16 - $6
+ret v1
+
+  9 - testar multiplicacao de constantes
+v1 = $2 * $3
+ret v1
+
+  10 - testar tudo acima mas com uma variavel e uma constante (positiva e negativa)
+v1 < $2
+v2 = v1 + $3
+ret v2
+
+v1 < $2
+v2 = v1 - $3
+ret v2
+
+v1 < $2
+v2 = v1 * $3
+ret v2
+
+v1 < $2
+v2 = v1 + $-3
+ret v2
+
+v1 < $2
+v2 = v1 - $-3
+ret v2
+
+v1 < $2
+v2 = v1 * $-3
+ret v2
+  
+  11 - testar tudo acima mas com duas variaveis
+v1 < $2
+v2 < $3
+v3 = v1 + v2
+ret v3
+
+v1 < $2
+v2 < $3
+v3 = v1 - v2
+ret v3
+
+v1 < $2
+v2 < $3
+v3 = v1 * v2
+ret v3
+  
+  12 - testar com 1 parametro (ate os 3 parametros)
+v1 = p1 + $3
+ret v1
+
+v1 = p1 - $3
+ret v1
+
+v1 = p1 * $3
+ret v1
+
+v1 = p1 + p2
+ret v1
+
+v1 = p1 - p2
+ret v1
+
+v1 = p1 * p2
+ret v1
+
+v1 = p1 + p2
+v2 = v1 + p3
+ret v2
+
+v1 = p1 - p2
+v2 = v1 - p3
+ret v2
+
+v1 = p1 * p2
+v2 = v1 * p3
+ret v2
+    
+  
+  13 - testar ops com parametros e variaveis e constantes tbm
+
+    v1 < $2
+    v2 = p1 + v1
+    v3 = v2 + $3
+    ret v3
+
+    v1 < $2
+    v2 = p1 - v1
+    v3 = v2 - $3
+    ret v3
+
+    v1 < $2
+    v2 = p1 * v1
+    v3 = v2 * $3
+    ret v3
+
+    v1 < $2
+    v2 = p1 + v1
+    v3 = v2 + p2
+    v4 = v3 + $3
+    v5 = v4 + p3
+    ret v5
+  
+  
+  
+  14 - testar iflez com constantes
+  15 - testar iflez com variaveis
+  16 - testar iflez com parametros
+  17 - testar iflez com loop
+  */
