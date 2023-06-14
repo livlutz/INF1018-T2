@@ -18,12 +18,19 @@ funcp gera(FILE *f, unsigned char codigo[]){
   /* Variável para controlar o loop de leitura do arquivo */
   int  c;
   
-  //endereço de ret na pilha
-
   /*pushq %rbp
     movq %rsp,%rbp
     subq $32,%rsp
   */
+  codigo[0] = 0x55;
+  codigo[1] = 0x48;
+  codigo[2] = 0x89;
+  codigo[3] = 0xe5;
+  codigo[4] = 0x48;
+  codigo[5] = 0x83;
+  codigo[6] = 0xec;
+  codigo[7] = 0x20;
+  ind = 8;
   
   while ((c = fgetc(f)) != EOF) {
     switch (c) {
@@ -35,64 +42,79 @@ funcp gera(FILE *f, unsigned char codigo[]){
         
         fscanf(f, "et %c%d", &var0, &idx0);
 
-        //movl 
-
         switch(var0){
           case '$': {
-            // $valor
+            //movl $d, %eax
+            codigo[ind] = 0xb8;
+            //valor little endian da constante
+            codigo[ind++] = idx0 & 0xff;
           }
 
           case 'p':{
-            
+            codigo[ind] = 0x89;
+
             /* p1 */
             if(idx0 == 1){
-              // %edi
+              //movl %edi, %eax
+              codigo[ind++] = 0xf8;
             }
             
             /* p2 */
             else if(idx0 == 2){
-              // %esi
+              //movl %esi, %eax
+              codigo[ind++] = 0xf0;
             }
             
             /* p3 */
             else{
-              // %edx
+              //movl %edx, %eax
+              codigo[ind++] = 0xd0;
             } 
       
           }
 
           case 'v':{
+            codigo[ind] = 0x8b;
+            codigo[ind++] = 0x45;
+
             /* v1 */
             if(idx0 == 1){
-              // %-4(%rbp)
+              //movl %-4(%rbp), %eax
+              codigo[ind++] = 0xfc;
+              
             }
             
             /* v2 */
             else if(idx0 == 2){
-              // %-8(%rbp)
+              //movl %-8(%rbp), %eax
+              codigo[ind++] = 0xf8;
             }
             
             /* v3 */
             else if (idx0 == 3){
-              // %-12(%rbp)
+              //movl %-12(%rbp), %eax
+              codigo[ind++] = 0xf4;
             }
 
             /* v4 */
             else if(idx0 == 4){
-              // %-16(%rbp)
+              //movl %-16(%rbp), %eax
+              codigo[ind++] = 0xf0;
             }
 
             /* v5 */
             else{
-              //  %-20(%rbp)
+              //movl %-20(%rbp), %eax
+              codigo[ind++] = 0xec;
             }
           }
         }
-
-        //,%eax
-
+        
         //leave
+        codigo[ind++] = 0xc9;
+        
         //ret
+        codigo[ind++] = 0xc3;
         
         break;
       }
