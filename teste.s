@@ -1,24 +1,31 @@
 pushq %rbp
 movq %rsp, %rbp
 subq $32, %rsp
-movl $1, %eax
-movl $-1, %eax
-movl %edi, %eax
-movl %esi, %eax
-movl %edx , %eax
-movl -4(%rbp), %eax
-movl -8(%rbp), %eax
-movl -12(%rbp), %eax
-movl -16(%rbp), %eax
-movl -20(%rbp), %eax
-movl $1, -4(%rbp)
-movl $-1, -8(%rbp)
-movl $1, -12(%rbp)
-movl $-1, -16(%rbp)
-movl $1, -20(%rbp)
-movl $-1, (%ebx)
-movl %edi, -12(%rbp)
-movl %esi, -16(%rbp)
-movl %edx, -20(%rbp)
+movq %rbx, -28(%rbp)
+addl $11111, -4(%rbp)
+addl $-18876564, -8(%rbp)
+addl $1098765, -12(%rbp)
+addl $-1, -16(%rbp)
+addl $-130, -20(%rbp)
+addl %edi, -12(%rbp)
+addl %esi, -16(%rbp)
+addl %edx, -20(%rbp)
+
+/*addl -4(%rbp), -8(%rbp)
+addl -8(%rbp), -4(%rbp)
+addl -12(%rbp), -16(%rbp)
+addl -16(%rbp), -12(%rbp)
+addl -20(%rbp), -16(%rbp)*/
+
+subl $1,-4(%rbp)
+subl $-1,-8(%rbp)
+subl %edi,-12(%rbp)
+subl %esi,-16(%rbp)
+subl %edx,-20(%rbp)
+/*subl -4(%rbp),-8(%rbp)
+subl -8(%rbp),-4(%rbp)
+subl -12(%rbp),-16(%rbp)
+subl -16(%rbp),-12(%rbp)
+subl -20(%rbp),-16(%rbp)*/
 leave
 ret

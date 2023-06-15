@@ -13,14 +13,22 @@ funcp gera(FILE *f, unsigned char codigo[]){
 
   /* Contador de linhas do arquivo (para desvio) */
   int line = 1;
+
   /* Indice para percorrer codigo[] */
   int ind = 0;
+
   /* Variável para controlar o loop de leitura do arquivo */
   int  c;
   
   /*pushq %rbp
-    movq %rsp,%rbp
-    subq $32,%rsp
+    movq %rsp, %rbp
+    subq $32, %rsp
+    movq %rbx, -28(%rbp)
+
+   0:   55                      push   %rbp
+   1:   48 89 e5                mov    %rsp,%rbp
+   4:   48 83 ec 20             sub    $0x20,%rsp
+   8:   48 89 5d e4             mov    %rbx,-0x1c(%rbp)
   */
   codigo[0] = 0x55;
   codigo[1] = 0x48;
@@ -30,13 +38,20 @@ funcp gera(FILE *f, unsigned char codigo[]){
   codigo[5] = 0x83;
   codigo[6] = 0xec;
   codigo[7] = 0x20;
-  ind = 8;
+  codigo[8] = 0x48;
+  codigo[9] = 0x89;
+  codigo[10] = 0x5d;
+  codigo[11] = 0xe4;
+
+  ind = 12;
   
   while ((c = fgetc(f)) != EOF) {
     switch (c) {
-      case 'r': { /* Condição de retorno */
+      /* Condição de retorno */
+      case 'r': { 
       /* var0 pega o caracter ('$', 'p' ou 'v') */
         char var0;
+
       /* idx0 pega o valor da constante a ser retornada*/
         int idx0;
         
@@ -46,8 +61,13 @@ funcp gera(FILE *f, unsigned char codigo[]){
           case '$': {
             //movl $d, %eax
             codigo[ind] = 0xb8;
-            //valor little endian da constante
-            codigo[ind++] = idx0 & 0xff;
+            
+            //valor little endian da constante, escrevendo byte a byte no array
+            for(int i = 0; i < 4; i++){
+              codigo[ind++] = idx0 & 0xff;
+              idx0 >>= 8;
+            }
+
           }
 
           case 'p':{
@@ -79,32 +99,32 @@ funcp gera(FILE *f, unsigned char codigo[]){
 
             /* v1 */
             if(idx0 == 1){
-              //movl %-4(%rbp), %eax
+              //movl -4(%rbp), %eax
               codigo[ind++] = 0xfc;
               
             }
             
             /* v2 */
             else if(idx0 == 2){
-              //movl %-8(%rbp), %eax
+              //movl -8(%rbp), %eax
               codigo[ind++] = 0xf8;
             }
             
             /* v3 */
             else if (idx0 == 3){
-              //movl %-12(%rbp), %eax
+              //movl -12(%rbp), %eax
               codigo[ind++] = 0xf4;
             }
 
             /* v4 */
             else if(idx0 == 4){
-              //movl %-16(%rbp), %eax
+              //movl -16(%rbp), %eax
               codigo[ind++] = 0xf0;
             }
 
             /* v5 */
             else{
-              //movl %-20(%rbp), %eax
+              //movl -20(%rbp), %eax
               codigo[ind++] = 0xec;
             }
           }
@@ -131,31 +151,37 @@ funcp gera(FILE *f, unsigned char codigo[]){
            ex: v1 < p1 -> p1 será armazenado em v1
            algo do tipo: v1 = p1 em C */
 
-        unsigned char posVar;
+        /*Variáveis para guardar o valor em hexadecimal de cada variável (para evitar repetição de código) */
+        unsigned char varPrim, varSeg;
         
         /* v1 */
         if(idx0 == 1){
-          //posVar = %-4(rbp) HEXA
+          //-4(%rbp)
+          varPrim = 0xfc;
         }
         
         /* v2 */
         else if(idx0 == 2){
-          //posVar = %-8(%rbp) HEXA
+          //-8(%rbp)
+          varPrim = 0xf8;
         }
         
         /* v3 */
         else if (idx0 == 3){
-          // posVar = %-12(%rbp) HEXA
+          //-12(%rbp)
+          varPrim = 0xf4;
         }
 
         /* v4 */
         else if(idx0 == 4){
-          //posVar = %-16(%rbp) HEXA
+          //-16(%rbp)
+          varPrim = 0xf0;
         }
 
         /* v5 */
         else{
-          //posVar = %-20(%rbp) HEXA
+          //-20(%rbp)
+          varPrim = 0xec;
         }
 
         /* A atribuição do primeiro elemento é necessária tanto para uma atribuição quanto para as operações */
@@ -164,62 +190,90 @@ funcp gera(FILE *f, unsigned char codigo[]){
         /*Pega o tipo ('$', 'p' ou 'v') e seu valor ou número*/
         fscanf(f, " %c%d", &var1, &idx1);
 
-        //movl
-
         switch(var1){
           case '$': {
-            //$valor
+            codigo[ind] = 0xc7;
+            codigo[ind++] = 0x45;
+            codigo[ind++] = varPrim;
+            
+            //valor little endian da constante, escrevendo byte a byte no array
+            for(int i = 0; i < 4; i++){
+              codigo[ind++] = idx1 & 0xff;
+              idx1 >>= 8;
+            }
+
           }
 
           case 'p':{
-          
+            //movl
+            codigo[ind] = 0x89;
+
             /* p1 */
             if(idx1 == 1){
-              // %edi
+              //%edi
+              codigo[ind++] = 0x7d;
             }
           
             /* p2 */
             else if(idx1 == 2){
               //%esi
+              codigo[ind++] = 0x75;
             }
             
             /* p3 */
             else{
               //%edx
-            } 
-    
+              codigo[ind++] = 0x55;
+            }
+             
+            //varPrim
+            codigo[ind++] = varPrim;
           }
 
           case 'v':{
             /* v1 */
             if(idx1 == 1){
-              //%-4(%rbp)
+              //-4(%rbp)
+              varSeg = 0xfc;
             }
             
             /* v2 */
             else if(idx1 == 2){
-              // %-8(%rbp)
+              //-8(%rbp)
+              varSeg = 0xf8;
             }
             
             /* v3 */
             else if (idx1 == 3){
-              //  %-12(%rbp)
+              //-12(%rbp)
+              varSeg = 0xf4;
             }
 
             /* v4 */
             else if(idx1 == 4){
-              // %-16(%rbp)
+              // -16(%rbp)
+              varSeg = 0xf0;
             }
 
             /* v5 */
             else{
-              // %-20(%rbp)
+              // -20(%rbp)
+              varSeg = 0xec;
             }
+
+            //movl varSeg, %ebx
+            codigo[ind++] = 0x8b;
+            codigo[ind++] = 0x5d;
+            codigo[ind++] = varSeg;
+
+            //movl %ebx, varPrim
+            codigo[ind++] = 0x89;
+            codigo[ind++] = 0x5d;
+            codigo[ind++] = varPrim;
+
           }
           
         }
-        
-        //,posVar
         
         /*----------------------------------------------------------------*/
         /* Se for uma operação, será necessário lidar com o operador e o segundo elemento */
@@ -302,10 +356,12 @@ funcp gera(FILE *f, unsigned char codigo[]){
             }
             
           }
-          //, posVar
+          //, varPrim
           
         }
         
+        ind++;
+
         break;
       }
       
@@ -334,7 +390,7 @@ funcp gera(FILE *f, unsigned char codigo[]){
         fscanf(f, "flez %c%d %d", &var0, &idx0, &n);
         
         
-            
+        
         break;
       }
       
