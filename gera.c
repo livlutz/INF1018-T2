@@ -49,6 +49,7 @@ funcp gera(FILE *f, unsigned char codigo[]){
     switch (c) {
       /* Condição de retorno */
       case 'r': { 
+
       /* var0 pega o caracter ('$', 'p' ou 'v') */
         char var0;
 
@@ -67,6 +68,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
               codigo[ind++] = idx0 & 0xff;
               idx0 >>= 8;
             }
+
+            break;
 
           }
 
@@ -89,7 +92,9 @@ funcp gera(FILE *f, unsigned char codigo[]){
             else{
               //movl %edx, %eax
               codigo[ind++] = 0xd0;
-            } 
+            }
+
+            break; 
       
           }
 
@@ -130,6 +135,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
           }
         }
         
+        //ADICIONAR TRATAMENTO DE LACUNA 
+
         //leave
         codigo[ind++] = 0xc9;
         
@@ -144,14 +151,16 @@ funcp gera(FILE *f, unsigned char codigo[]){
         int idx0, idx1;
         char var0 = c, c0, var1;
         
-        /* Pega num da var e comando (att ou op) */
+        /* Pega número da var e comando (att ou op) */
         fscanf(f, "%d %c", &idx0, &c0);
 
         /* atribuição
            ex: v1 < p1 -> p1 será armazenado em v1
            algo do tipo: v1 = p1 em C */
 
-        /*Variáveis para guardar o valor em hexadecimal de cada variável (para evitar repetição de código) */
+        /*Variáveis para guardar o valor em hexadecimal de cada variável 
+        (para evitar repetição de código) */
+        
         unsigned char varPrim, varSeg;
         
         /* v1 */
@@ -184,7 +193,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
           varPrim = 0xec;
         }
 
-        /* A atribuição do primeiro elemento é necessária tanto para uma atribuição quanto para as operações */
+        /* A atribuição do primeiro elemento é necessária tanto 
+           para uma atribuição quanto para as operações */
         /*----------------------------------------------------------------*/
 
         /*Pega o tipo ('$', 'p' ou 'v') e seu valor ou número*/
@@ -201,6 +211,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
               codigo[ind++] = idx1 & 0xff;
               idx1 >>= 8;
             }
+
+            break;
 
           }
 
@@ -228,6 +240,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
              
             //varPrim
             codigo[ind++] = varPrim;
+
+            break;
           }
 
           case 'v':{
@@ -290,105 +304,253 @@ funcp gera(FILE *f, unsigned char codigo[]){
           /* Lê operador, tipo do segundo elemento e valor ou número dele */
           fscanf(f, " %c %c%d", &op, &var2, &idx2);
 
-          switch(op){
-            case '+':{
-              //addl
-            }
-            
-            case '-':{
-              //subl
-            }
-            
-            case '*':{
-              //imull
-            }
-          }
-            
-          switch(var2){
-            case '$': {
-              //$valor
-            }
+          // Se for multiplicação, trata primeiro, porque add e sub é parecido
 
-            case 'p':{
-            
-              /* p1 */
-              if(idx1 == 1){
-                // %edi
-              }
-            
-              /* p2 */
-              else if(idx1 == 2){
-                //%esi
+          if(op == '*'){
+            //movl varPrim, %ebx
+            codigo[ind++] = 0x8b;
+            codigo[ind++] = 0x5d;
+            codigo[ind++] = varPrim;
+
+            // Se for constante, trata primeiro, porque parametro e variavel é parecido
+            if(var2 == '$'){
+
+              /* Se a constante tiver mais de 1 byte de conteúdo OU tiver 1 byte, 
+              for positiva mas o bit mais significativo não for 0
+              OU Tiver 1 byte, for negativa mas o bit mais significativo não for 1*/ 
+              
+              if((idx2 >> 8 != -1 && idx2 >> 8 != 0) || (idx2 >> 8 == 0 && idx2 & 0x80 != 0) || (idx2 >> 8 == -1 && idx2 & 0x80 != 0x80)){
+                codigo[ind++] = 0x69;
+                codigo[ind++] = 0xdb;
+
+                //valor little endian da constante, escrevendo byte a byte no array
+                
+                for(int i = 0; i < 4; i++){
+                  codigo[ind++] = idx2 & 0xff;
+                  idx2 >>= 8;
+                }
               }
               
-              /* p3 */
               else{
-                //%edx
-              } 
-      
-            }
+                codigo[ind++] = 0x6b;
+                codigo[ind++] = 0xdb;
+                
+                /*Byte menos significativo, que contém o conteúdo da constante, 
+                sendo o restante tudo 0 ou 1*/
 
-            case 'v':{
-              /* v1 */
-              if(idx1 == 1){
-                //%-4(%rbp)
-              }
-              
-              /* v2 */
-              else if(idx1 == 2){
-                // %-8(%rbp)
-              }
-              
-              /* v3 */
-              else if (idx1 == 3){
-                //  %-12(%rbp)
+                codigo[ind++] = idx2 & 0xff;
               }
 
-              /* v4 */
-              else if(idx1 == 4){
-                // %-16(%rbp)
-              }
-
-              /* v5 */
-              else{
-                // %-20(%rbp)
-              }
             }
             
+            //Parâmetro ou variável	
+            else{
+              codigo[ind++] = 0x0f;
+              codigo[ind++] = 0xaf;
+
+              switch (var2){
+                case 'p':{
+                  /* p1 */
+                  if(idx2 == 1){
+                    codigo[ind++] = 0xdf;
+                  }
+
+                  /* p2 */
+                  else if(idx2 == 2){
+                    codigo[ind++] = 0xde;
+                  }
+
+                  /* p3 */
+                  else{
+                    codigo[ind++] = 0xda;
+                  }
+                  break;
+                }
+                case 'v':{
+                  codigo[ind++] = 0x5d;
+                  
+                  /* v1 */
+                  if(idx2 == 1){
+                    //-4(%rbp)
+                    codigo[ind++] = 0xfc;
+                  }
+                  
+                  /* v2 */
+                  else if(idx2 == 2){
+                    //-8(%rbp)
+                    codigo[ind++] = 0xf8;
+                  }
+                  
+                  /* v3 */
+                  else if (idx2 == 3){
+                    //-12(%rbp)
+                    codigo[ind++] = 0xf4;
+                  }
+
+                  /* v4 */
+                  else if(idx2 == 4){
+                    // -16(%rbp)
+                    codigo[ind++] = 0xf0;
+                  }
+
+                  /* v5 */
+                  else{
+                    // -20(%rbp)
+                    codigo[ind++] = 0xec;
+                  }
+                }
+              }
+            }
+
+            //movl %ebx, varPrim
+            codigo[ind++] = 0x89;
+            codigo[ind++] = 0x5d;
+            codigo[ind++] = varPrim;
           }
-          //, varPrim
-          
+
+          //Add ou sub
+          else{
+            
+            //Se for constante
+            if(var2 == '$'){
+              
+              /* Se a constante tiver mais de 1 byte de conteúdo OU tiver 1 byte, 
+              for positiva mas o bit mais significativo não for 0
+              OU Tiver 1 byte, for negativa mas o bit mais significativo não for 1*/ 
+              
+              if((idx2 >> 8 != -1 && idx2 >> 8 != 0) || (idx2 >> 8 == 0 && idx2 & 0x80 != 0) || (idx2 >> 8 == -1 && idx2 & 0x80 != 0x80)){
+                codigo[ind++] = 0x81;
+                
+                if(op == '+'){
+                  codigo[ind++] = 0x45;
+                }
+
+                //Se for subtração
+
+                else{ 
+                  codigo[ind++] = 0x6d;
+                }
+                
+                //Valor little endian da constante, escrevendo byte a byte no array
+
+                for(int i = 0; i < 4; i++){
+                  codigo[ind++] = idx2 & 0xff;
+                  idx2 >>= 8;
+                }
+              }
+              
+              else{
+                codigo[ind++] = 0x83;
+                
+                if(op == '+'){
+                  codigo[ind++] = 0x45;
+                }
+
+                //Se for subtração
+                
+                else{ 
+                  codigo[ind++] = 0x6d;
+                }
+                
+                /*Byte menos significativo, que contém o conteúdo da constante, 
+                sendo o restante tudo 0 ou 1*/
+                codigo[ind++] = idx2 & 0xff;
+              }
+            }
+            //Se for parâmetro ou variável
+            else{
+
+              /*Se for variável, tem uma atribuição antes para conseguir fazer a operação, 
+              tanto add quanto sub*/
+
+              if(var2 == 'v'){
+                codigo[ind++] = 0x8b;
+                codigo[ind++] = 0x5d;
+              
+                /* v1 */
+                if(idx2 == 1){
+                  //-4(%rbp)
+                  codigo[ind++] = 0xfc;
+                }
+                
+                /* v2 */
+                else if(idx2 == 2){
+                  //-8(%rbp)
+                  codigo[ind++] = 0xf8;
+                }
+                
+                /* v3 */
+                else if (idx2 == 3){
+                  //-12(%rbp)
+                  codigo[ind++] = 0xf4;
+                }
+
+                /* v4 */
+                else if(idx2 == 4){
+                  //-16(%rbp)
+                  codigo[ind++] = 0xf0;
+                }
+
+                /* v5 */
+                else{
+                  //-20(%rbp)
+                  codigo[ind++] = 0xec;
+                }
+              }
+
+              if(op == '+'){
+                codigo[ind++] = 0x01;
+              }
+
+              //Se for subtração
+              else{ 
+                codigo[ind++] = 0x29;  
+              }
+              
+              switch (var2){
+                case 'p':{
+
+                  /* p1 */
+                  if(idx2 == 1){
+                    codigo[ind++] = 0x7d;
+                  }
+
+                  /* p2 */
+                  else if(idx2 == 2){
+                    codigo[ind++] = 0x75;
+                  }
+
+                  /* p3 */
+                  else{
+                    codigo[ind++] = 0x55;
+                  }
+                  break;
+                }
+                
+                case 'v':{
+                  codigo[ind++] = 0x5d;
+                }
+
+                codigo[ind++] = varPrim;
+              }
+            }
+          } 
         }
-        
+
+        // Soma um no índice para na próxima linha ficar certo
         ind++;
 
         break;
       }
-      
-      case 'i': { /* desvio condicional */
+
+      /* desvio condicional */
+      case 'i': { 
         char var0;
         int idx0, n;
         
         //jump if less or equal to zero
 
-        /*
-        v1<$5
-        L1:
-        cond v1 <= 0 jmp pra 5
-        v1--
-        jmp linha 2
-        L2:
-        ret
-
-        v1<$-15
-        L1:
-        v1++
-        cond v1 <= 0 jmp pra 2
-        ret
-        */
-
         fscanf(f, "flez %c%d %d", &var0, &idx0, &n);
-        
         
         
         break;
