@@ -1,4 +1,9 @@
 
+movl -4(%rbp),%r12d
+movl -8(%rbp),%r13d
+movl -12(%rbp),%r14d
+movl -16(%rbp),%r15d
+
 addl $11111, -4(%rbp)
 addl $-18876564, -8(%rbp)
 addl $1098765, -12(%rbp)
