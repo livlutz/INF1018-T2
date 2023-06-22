@@ -19,6 +19,9 @@ funcp gera(FILE *f, unsigned char codigo[]){
 
   /* Variável para controlar o loop de leitura do arquivo */
   int  c;
+
+  /* Vetor para guardar índice de onde começa cada linha */
+  int indLine[30] = {0};
   
   /*pushq %rbp
     movq %rsp, %rbp
@@ -46,6 +49,10 @@ funcp gera(FILE *f, unsigned char codigo[]){
   ind = 12;
   
   while ((c = fgetc(f)) != EOF) {
+    
+    /* Coloca no vetor onde começou essa linha */
+    indLine[line - 1] = ind;
+
     switch (c) {
       /* Condição de retorno */
       case 'r':{ 
@@ -331,6 +338,7 @@ funcp gera(FILE *f, unsigned char codigo[]){
               }
               
               else{
+                /* Se a constante tiver 1 byte*/
                 codigo[++ind] = 0x6b;
                 codigo[++ind] = 0xdb;
                 
@@ -458,16 +466,16 @@ funcp gera(FILE *f, unsigned char codigo[]){
 
               /*Se for variável, tem uma atribuição antes para conseguir fazer a operação, 
               tanto add quanto sub*/
-              if(op == '+'){
-                codigo[++ind] = 0x01;
-              }
-
-              //Se for subtração
-              else{ 
-                codigo[++ind] = 0x29;  
-              }
               
               if(var2 == 'v'){
+                  if(op == '+'){
+                  codigo[++ind] = 0x03;
+                }
+
+                //Se for subtração
+                else{ 
+                  codigo[++ind] = 0x2b;  
+                }
                 codigo[++ind] = 0x5d;
               
                 /* v1 */
@@ -501,7 +509,17 @@ funcp gera(FILE *f, unsigned char codigo[]){
                 }
               }
               
-              else{
+              else{ //parâmetros
+
+                  if(op == '+'){
+                  codigo[++ind] = 0x01;
+                }
+
+                //Se for subtração
+                else{ 
+                  codigo[++ind] = 0x29;  
+                }
+
                 /* p1 */
                 if(idx2 == 1){
                   codigo[++ind] = 0xfb;
