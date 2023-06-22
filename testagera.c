@@ -22,13 +22,18 @@
   FILE *myfp;
   char nomeArquivo[12] = "teste", fim[5] = ".txt";
   char num[3];
+
   if(numTeste < 10){
     num[0] = numTeste + '0';
+    num[1] = '\0';
   }
+
   else{
     num[0] = (numTeste/10) + '0';
     num[1] = (numTeste%10) + '0';
+    num[2] = '\0';
   }
+  
   strcat(nomeArquivo, num);
   strcat(nomeArquivo, fim);
   
@@ -36,6 +41,7 @@
     printf("Falha na abertura do arquivo de teste %d\n", numTeste); 
     exit(1);
   }
+  
   return myfp;
  }
 
@@ -243,7 +249,7 @@ int main(void) {
   fclose(myfp);
 
   res = (*funcaoSimples) ();
-  erros += comparaResultado(res,24,testes,"multiplicacao de constantes");
+  erros += comparaResultado(res,6,testes,"multiplicacao de constantes");
   testes++;
 
   /* Teste 15 - soma de variavel com constante */
@@ -300,7 +306,7 @@ int main(void) {
 
   res = (*funcaoSimples) ();
   erros += comparaResultado(res,-1,testes,"soma de variavel com variavel");
-  testes++;
+  testes++; 
   
   /* Teste 19 - subtracao de variavel com constante negativa */
 
@@ -341,6 +347,7 @@ int main(void) {
   fclose(myfp);
 
   res = (*funcaoSimples) ();
+  printf("%d\n",res);
   erros += comparaResultado(res,5,testes,"soma de variavel com variavel");
   testes++;
 
@@ -355,6 +362,7 @@ int main(void) {
   fclose(myfp);
 
   res = (*funcaoSimples) ();
+  printf("%d\n",res);
   erros += comparaResultado(res,-1,testes,"subtracao de variavel com variavel");
   testes++;
 
@@ -425,7 +433,7 @@ int main(void) {
   fclose(myfp);
 
   res = (*funcaoSimples) (539729,3);
-  erros += comparaResultado(res,539726,testes,"soma de 2 parametros");
+  erros += comparaResultado(res,539732,testes,"soma de 2 parametros");
   testes++;
 
   /* Teste 28 - subtracao de 2 parametros */

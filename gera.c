@@ -305,12 +305,12 @@ funcp gera(FILE *f, unsigned char codigo[]){
 
           // Se for multiplicação, trata primeiro, porque add e sub é parecido
 
-          if(op == '*'){
-            //movl varPrim, %ebx
-            codigo[++ind] = 0x8b;
-            codigo[++ind] = 0x5d;
-            codigo[++ind] = varPrim;
+          //movl varPrim, %ebx
+          codigo[++ind] = 0x8b;
+          codigo[++ind] = 0x5d;
+          codigo[++ind] = varPrim;
 
+          if(op == '*'){
             // Se for constante, trata primeiro, porque parametro e variavel é parecido
             if(var2 == '$'){
 
@@ -400,11 +400,6 @@ funcp gera(FILE *f, unsigned char codigo[]){
                 }
               }
             }
-
-            //movl %ebx, varPrim
-            codigo[++ind] = 0x89;
-            codigo[++ind] = 0x5d;
-            codigo[++ind] = varPrim;
           }
 
           //Add ou sub
@@ -421,13 +416,13 @@ funcp gera(FILE *f, unsigned char codigo[]){
                 codigo[++ind] = 0x81;
                 
                 if(op == '+'){
-                  codigo[++ind] = 0x45;
+                  codigo[++ind] = 0xc3;
                 }
 
                 //Se for subtração
 
                 else{ 
-                  codigo[++ind] = 0x6d;
+                  codigo[++ind] = 0xeb;
                 }
                 
                 //Valor little endian da constante, escrevendo byte a byte no array
@@ -438,17 +433,18 @@ funcp gera(FILE *f, unsigned char codigo[]){
                 }
               }
               
+              //se for 1 byte
               else{
                 codigo[++ind] = 0x83;
                 
                 if(op == '+'){
-                  codigo[++ind] = 0x45;
+                  codigo[++ind] = 0xc3;
                 }
 
                 //Se for subtração
                 
                 else{ 
-                  codigo[++ind] = 0x6d;
+                  codigo[++ind] = 0xeb;
                 }
                 
                 /*Byte menos significativo, que contém o conteúdo da constante, 
@@ -456,14 +452,22 @@ funcp gera(FILE *f, unsigned char codigo[]){
                 codigo[++ind] = idx2 & 0xff;
               }
             }
+
             //Se for parâmetro ou variável
             else{
 
               /*Se for variável, tem uma atribuição antes para conseguir fazer a operação, 
               tanto add quanto sub*/
+              if(op == '+'){
+                codigo[++ind] = 0x01;
+              }
 
+              //Se for subtração
+              else{ 
+                codigo[++ind] = 0x29;  
+              }
+              
               if(var2 == 'v'){
-                codigo[++ind] = 0x8b;
                 codigo[++ind] = 0x5d;
               
                 /* v1 */
@@ -496,44 +500,32 @@ funcp gera(FILE *f, unsigned char codigo[]){
                   codigo[++ind] = 0xec;
                 }
               }
-
-              if(op == '+'){
-                codigo[++ind] = 0x01;
-              }
-
-              //Se for subtração
-              else{ 
-                codigo[++ind] = 0x29;  
-              }
               
-              switch (var2){
-                case 'p':{
+              else{
+                /* p1 */
+                if(idx2 == 1){
+                  codigo[++ind] = 0xfb;
+                }
 
-                  /* p1 */
-                  if(idx2 == 1){
-                    codigo[++ind] = 0x7d;
-                  }
+                /* p2 */
+                else if(idx2 == 2){
+                  codigo[++ind] = 0xf3;
+                }
 
-                  /* p2 */
-                  else if(idx2 == 2){
-                    codigo[++ind] = 0x75;
-                  }
-
-                  /* p3 */
-                  else{
-                    codigo[++ind] = 0x55;
-                  }
-                  break;
+                /* p3 */
+                else{
+                  codigo[++ind] = 0xd3;
                 }
                 
-                case 'v':{
-                  codigo[++ind] = 0x5d;
-                }
-
-                codigo[++ind] = varPrim;
               }
             }
           } 
+
+          //movl %ebx, varPrim
+          codigo[++ind] = 0x89;
+          codigo[++ind] = 0x5d;
+          codigo[++ind] = varPrim;
+
         }
 
         // Soma um no índice para na próxima linha ficar certo
@@ -565,12 +557,12 @@ funcp gera(FILE *f, unsigned char codigo[]){
     fscanf(f, " ");
   }
 
-  int i = 0;
-
+  /*int i = 0;
+  
   while(codigo[i] != 0xc3){
     printf("%02x\n", codigo[i]);
     i++;
-  }
-  
+  }*/
+
   return (funcp)codigo; 
 }
