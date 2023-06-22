@@ -6,6 +6,12 @@
 #include <string.h> 
 #include "gera.h"
 
+struct desvio{
+  int indLacuna;
+  int linha;
+};
+
+typedef struct desvio Desvio;
 
 /* Função que gera o código de máquina a partir de um arquivo com instruções em linguagem simples */
 
@@ -22,6 +28,12 @@ funcp gera(FILE *f, unsigned char codigo[]){
 
   /* Vetor para guardar índice de onde começa cada linha */
   int indLine[30] = {0};
+
+  /* Vetor para guardar lacunas de jump que ainda não puderem ser preenchidas */
+  Desvio lacunas[30];
+
+  /* Contador de desvios */
+  int desvios = 0;
   
   /*pushq %rbp
     movq %rsp, %rbp
@@ -151,8 +163,9 @@ funcp gera(FILE *f, unsigned char codigo[]){
         
         break;
       }
-      
-      case 'v': { /* atribuição e op. aritmética */
+
+      /* atribuição e op. aritmética */
+      case 'v': { 
 
         int idx0, idx1;
         char c0, var1;
@@ -556,11 +569,75 @@ funcp gera(FILE *f, unsigned char codigo[]){
       case 'i': { 
         char var0;
         int idx0, n;
+        int deltaInd = 0;
+        unsigned char * deltaEnd = NULL;
         
         //jump if less or equal to zero
 
         fscanf(f, "flez %c%d %d", &var0, &idx0, &n);
         
+        //movl var, %ebx
+        codigo[ind] = 0x8b; 
+        codigo[++ind] = 0x5d;
+        
+        /* v1 */
+        if(idx0 == 1){
+          //-4(%rbp)
+          codigo[++ind] = 0xfc;
+        }
+        
+        /* v2 */
+        else if(idx0 == 2){
+          //-8(%rbp)
+          codigo[++ind] = 0xf8;
+        }
+        
+        /* v3 */
+        else if (idx0 == 3){
+          //-12(%rbp)
+          codigo[++ind] = 0xf4;
+        }
+
+        /* v4 */
+        else if(idx0 == 4){
+          // -16(%rbp)
+          codigo[++ind] = 0xf0;
+        }
+
+        /* v5 */
+        else{
+          // -20(%rbp)
+          codigo[++ind] = 0xec;
+        }
+
+        //cmpl $0, %ebx
+
+        codigo[++ind] = 0x83;
+        codigo[++ind] = 0xfb;
+        codigo[++ind] = 0x00;
+
+        /*Considerando se a linha está antes ou depois do comando iflez*/
+        deltaInd = indLine[n - 1] - ind + 1;
+        
+        if(n < line){
+          
+        }
+
+        else{
+          
+        }
+
+        /* Se o delta tiver mais de 1 byte de conteúdo OU tiver 1 byte, 
+        for positivo mas o bit mais significativo não for 0
+        OU Tiver 1 byte, for negativo mas o bit mais significativo não for 1*/ 
+
+        if(((delta >> 8 != -1) && (delta >> 8 != 0)) || ((delta >> 8 == 0) && ((delta & 0x80) != 0)) || ((delta >> 8 == -1) && ((delta & 0x80) != 0x80))){
+
+          
+        }
+
+        
+
         
         break;
       }

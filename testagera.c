@@ -506,6 +506,20 @@ int main(void) {
   erros += comparaResultado(res,280000000,testes,"multiplicacao de 3 parametros, atribuindo a segunda variavel");
   testes++;
 
+  /*Teste 33 - inflez voltando para a linha acima */
+
+  myfp = openFileTeste(testes);
+
+  /* Compila a função simples */
+
+  funcaoSimples = gera(myfp,codigo);
+
+  fclose(myfp);
+
+  res = (*funcaoSimples) ();
+  erros += comparaResultado(res,1,testes,"inflez voltando para a linha acima");
+  testes++;
+
   printf("Erros totais: %d de %d testes\n",erros,testes-1);
   return 0;
 
