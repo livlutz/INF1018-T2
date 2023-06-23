@@ -505,7 +505,7 @@ int main(void) {
   erros += comparaResultado(res,280000000,testes,"Multiplicacao de 3 parametros, atribuindo a segunda variavel");
   testes++;
 
-  /* Teste 33 - inflez voltando para linha acima */
+  /* Teste 33 - iflez voltando para linha acima */
 
   myfp = openFileTeste(testes);
 
@@ -516,7 +516,7 @@ int main(void) {
   fclose(myfp);
 
   res = (*funcaoSimples) ();
-  erros += comparaResultado(res,1,testes,"Inflez voltando para linha acima");
+  erros += comparaResultado(res,1,testes,"Iflez voltando para linha acima");
   testes++;
 
   /* Teste 34 - entrando na condição do iflez mandando para linha abaixo */
