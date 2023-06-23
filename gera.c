@@ -6,11 +6,14 @@
 #include <string.h> 
 #include "gera.h"
 
+/* Struct para guardar as lacunas de jump que ainda não puderem ser preenchidas */
 struct desvio{
+  /* Índice em que ficou a lacuna */
   int indLacuna;
-  int linha;
+  
+  /* Número da linha para a qual queremos pular*/
+  int linha; 
 };
-
 typedef struct desvio Desvio;
 
 /* Função que gera o código de máquina a partir de um arquivo com instruções em linguagem simples */
@@ -32,8 +35,12 @@ funcp gera(FILE *f, unsigned char codigo[]){
   /* Vetor para guardar lacunas de jump que ainda não puderem ser preenchidas */
   Desvio lacunas[30];
 
-  /* Contador de desvios */
+  /* Contador de desvios com lacunas */
   int desvios = 0;
+
+  /* Variáveis para lidar com o tratamento de lacunas*/
+  int i = 0, linha = 0;
+  
   
   /*pushq %rbp
     movq %rsp, %rbp
@@ -45,6 +52,7 @@ funcp gera(FILE *f, unsigned char codigo[]){
    4:   48 83 ec 20             sub    $0x20,%rsp
    8:   48 89 5d e4             mov    %rbx,-0x1c(%rbp)
   */
+ 
   codigo[0] = 0x55;
   codigo[1] = 0x48;
   codigo[2] = 0x89;
@@ -60,6 +68,7 @@ funcp gera(FILE *f, unsigned char codigo[]){
 
   ind = 12;
   
+  /* Loop para ler as instruções em linguagem simples do arquivo */
   while ((c = fgetc(f)) != EOF) {
     
     /* Coloca no vetor onde começou essa linha */
@@ -68,15 +77,21 @@ funcp gera(FILE *f, unsigned char codigo[]){
     switch (c) {
       /* Condição de retorno */
       case 'r':{ 
+        
        /* var0 pega o caracter ('$', 'p' ou 'v') */
         char var0;
 
        /* idx0 pega o valor da constante a ser retornada*/
         int idx0;
+
+        /* Pega o caractere e o valor da constante */
         
         fscanf(f, "et %c%d", &var0, &idx0);
 
+        /* Verificando o que a função vai retornar*/
+
         switch(var0){
+          /* Constante */
           case '$': {
             //movl $d, %eax
             codigo[ind] = 0xb8;
@@ -91,7 +106,10 @@ funcp gera(FILE *f, unsigned char codigo[]){
 
           }
 
+          /* Parâmetro */
+
           case 'p':{
+            //movl
             codigo[ind] = 0x89;
 
             /* p1 */
@@ -116,7 +134,10 @@ funcp gera(FILE *f, unsigned char codigo[]){
       
           }
 
+          /* Variável */
+
           case 'v':{
+            //movl
             codigo[ind] = 0x8b;
             codigo[++ind] = 0x45;
 
@@ -152,15 +173,14 @@ funcp gera(FILE *f, unsigned char codigo[]){
             }
           }
         }
-        
-        //ADICIONAR TRATAMENTO DE LACUNA 
 
         //leave
         codigo[++ind] = 0xc9;
         
         //ret
         codigo[++ind] = 0xc3;
-        
+
+        ind++;
         break;
       }
 
@@ -219,7 +239,11 @@ funcp gera(FILE *f, unsigned char codigo[]){
         /*Pega o tipo ('$', 'p' ou 'v') e seu valor ou número*/
         fscanf(f, " %c%d", &var1, &idx1);
 
+        /* Verificando o que a função vai atribuir*/
+
         switch(var1){
+          /* Constante */
+
           case '$': {
             codigo[ind] = 0xc7;
             codigo[++ind] = 0x45;
@@ -234,6 +258,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
             break;
 
           }
+
+          //Parâmetro
 
           case 'p':{
             //movl
@@ -262,6 +288,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
 
             break;
           }
+
+          //Variável
 
           case 'v':{
             /* v1 */
@@ -312,6 +340,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
         /* Se for uma operação, será necessário lidar com o operador e o segundo elemento */
         
         if (c0 == '=') { 
+
+          //Variáveis para ler o operador e o segundo elemento
           char var2, op;
           int idx2;
 
@@ -329,6 +359,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
           codigo[++ind] = 0x8b;
           codigo[++ind] = 0x5d;
           codigo[++ind] = varPrim;
+
+          /*Verificando o tipo de operação*/
 
           if(op == '*'){
             // Se for constante, trata primeiro, porque parametro e variavel é parecido
@@ -386,6 +418,7 @@ funcp gera(FILE *f, unsigned char codigo[]){
                   }
                   break;
                 }
+                
                 case 'v':{
                   codigo[++ind] = 0x5d;
                   
@@ -435,6 +468,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
               
               if(((idx2 >> 8 != -1) && (idx2 >> 8 != 0)) || ((idx2 >> 8 == 0) && ((idx2 & 0x80) != 0)) || ((idx2 >> 8 == -1) && ((idx2 & 0x80) != 0x80))){
                 codigo[++ind] = 0x81;
+
+                //Se for adição
                 
                 if(op == '+'){
                   codigo[++ind] = 0xc3;
@@ -457,6 +492,8 @@ funcp gera(FILE *f, unsigned char codigo[]){
               //se for 1 byte
               else{
                 codigo[++ind] = 0x83;
+
+                //Se for adição
                 
                 if(op == '+'){
                   codigo[++ind] = 0xc3;
@@ -489,6 +526,7 @@ funcp gera(FILE *f, unsigned char codigo[]){
                 else{ 
                   codigo[++ind] = 0x2b;  
                 }
+
                 codigo[++ind] = 0x5d;
               
                 /* v1 */
@@ -522,8 +560,10 @@ funcp gera(FILE *f, unsigned char codigo[]){
                 }
               }
               
-              else{ //parâmetros
+              //parâmetros
+              else{ 
 
+                //se for adição
                   if(op == '+'){
                   codigo[++ind] = 0x01;
                 }
@@ -569,8 +609,7 @@ funcp gera(FILE *f, unsigned char codigo[]){
       case 'i': { 
         char var0;
         int idx0, n;
-        int deltaInd = 0;
-        unsigned char * deltaEnd = NULL;
+        int delta = 0;
         
         //jump if less or equal to zero
 
@@ -616,29 +655,28 @@ funcp gera(FILE *f, unsigned char codigo[]){
         codigo[++ind] = 0xfb;
         codigo[++ind] = 0x00;
 
+        //jle label (jump if less or equal)
+        codigo[++ind] = 0x7e;
+    
         /*Considerando se a linha está antes ou depois do comando iflez*/
-        deltaInd = indLine[n - 1] - ind + 1;
-        
         if(n < line){
+          /* Já que é uma linha anterior, o vetor indLine já tem a informação do índice da linha desejada */
           
+          /* Cálculo do índice do vetor correspondente à linha desejada */
+          delta = (indLine[n - 1] - ind + 3);
+          codigo[++ind] = ((char)delta & 0xff); 
         }
 
-        else{
+        else{ /* Se n > line */
+
+          /* Coloca no vetor o índice que ficou a lacuna e para que linha deve pular */
+          lacunas[desvios].indLacuna = ++ind;
+          lacunas[desvios].linha = n;
           
+          desvios++;
         }
-
-        /* Se o delta tiver mais de 1 byte de conteúdo OU tiver 1 byte, 
-        for positivo mas o bit mais significativo não for 0
-        OU Tiver 1 byte, for negativo mas o bit mais significativo não for 1*/ 
-
-        if(((delta >> 8 != -1) && (delta >> 8 != 0)) || ((delta >> 8 == 0) && ((delta & 0x80) != 0)) || ((delta >> 8 == -1) && ((delta & 0x80) != 0x80))){
-
-          
-        }
-
         
-
-        
+        ind++;
         break;
       }
       
@@ -648,16 +686,25 @@ funcp gera(FILE *f, unsigned char codigo[]){
       }
     }
     
-    line ++;
+    line++;
     fscanf(f, " ");
   }
 
-  /*int i = 0;
+  /* Tratamento de lacunas */
   
-  while(codigo[i] != 0xc3){
-    printf("%02x\n", codigo[i]);
-    i++;
-  }*/
+  /* Loop para lidar com todos os desvios que tiverem */
+  while(desvios){
+    /* Pega o índice do vetor que está esperando um valor de delta */
+    i = lacunas[desvios - 1].indLacuna;
+
+    /* Pega a linha para a qual queremos pular */
+    linha = lacunas[desvios - 1].linha;
+
+    /* Calcula o delta e atribui ao índice certo */
+    codigo[i] = (char)(indLine[linha -1] - i - 1) & 0xff;
+    
+    desvios--;
+  }
 
   return (funcp)codigo; 
 }

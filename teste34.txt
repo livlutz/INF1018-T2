@@ -1,1 +1,5 @@
-/* teste de desvio para linha acima */
+v1 < p1
+v1 = v1 + $1
+iflez v1 5
+ret $0
+ret $1
